@@ -8,7 +8,7 @@
             string[] qatorlar = { "GetAll", "Insertion", "ShowMessages" };
             int cursor = 0;
             ConsoleKeyInfo key;
-
+            
             while (true)
             {
                 for (int i = 0; i < qatorlar.Length; i++)

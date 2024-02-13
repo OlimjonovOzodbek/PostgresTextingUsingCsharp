@@ -1,4 +1,6 @@
 ﻿using Npgsql;
+using System.Security.Cryptography;
+using System.Text;
 namespace ConsoleApp3
 {
     public class Message
@@ -32,12 +34,15 @@ namespace ConsoleApp3
             username = Console.ReadLine();
             Console.Write("Password -> ");
             password = Console.ReadLine();
+            var mypas = HashPasword(password, out var salt);
+            Console.WriteLine(mypas);
+            Console.WriteLine($"salt: {Convert.ToHexString(salt)}");
             try
             {
                 using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
                 {
                     connection.Open();
-                    string query = $"insert into Data1(name, password) values('{username}', '{password}');";
+                    string query = $"insert into Data1(name, password ,salt) values('{username}', '{mypas}','{Convert.ToHexString(salt)}');";
                     NpgsqlCommand command = new NpgsqlCommand(query, connection);
                     command.ExecuteNonQuery();
                 }
@@ -63,6 +68,25 @@ namespace ConsoleApp3
             }
             Console.WriteLine("Yozildi");
         }
+
+        public const int keySize = 64;
+        public const int iterations = 350000;
+        HashAlgorithmName hashAlgorithm = HashAlgorithmName.SHA512;
+
+        public string HashPasword(string password, out byte[] salt)
+        {
+            salt = RandomNumberGenerator.GetBytes(keySize);
+
+            var hash = Rfc2898DeriveBytes.Pbkdf2(
+            Encoding.UTF8.GetBytes(password),
+            salt,
+            iterations,
+            hashAlgorithm,
+            keySize);
+
+            return Convert.ToHexString(hash);
+        }
+       
         public void GetMsg()
         {
             using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
